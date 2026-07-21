@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeAid AI — Know what's wrong. Know what to do next.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,450;9..144,560;9..144,650&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12232B; --paper:#EFF3F0; --paper-dim:#E4EAE5;
+    --teal:#1F6F63; --teal-deep:#164F46;
+    --coral:#E8543A; --coral-deep:#C23F29;
+    --text:#25343A; --text-soft:#5A6B6A;
+    --line:#C9D6D1; --line-dark:#2A3E42; --white:#FCFDFB;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--paper);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+  h1,h2,h3,.display{font-family:'Fraunces',serif;font-weight:560;letter-spacing:-0.01em;color:var(--ink);margin:0;}
+  .mono{font-family:'IBM Plex Mono',monospace;letter-spacing:0.04em;}
+  a{color:inherit;} img,svg{display:block;max-width:100%;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px;}
+  @media (max-width:640px){ .wrap{padding:0 20px;} }
+  :focus-visible{outline:3px solid var(--teal);outline-offset:3px;}
+  button{font-family:'Inter',sans-serif;}
+
+  /* NAV */
+  .nav{position:sticky;top:0;z-index:50;background:rgba(239,243,240,0.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
+  .nav-inner{display:flex;align-items:center;justify-content:space-between;padding:18px 32px;max-width:1180px;margin:0 auto;}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Fraunces',serif;font-weight:650;font-size:20px;color:var(--ink);text-decoration:none;}
+  .brand-mark{width:26px;height:26px;flex-shrink:0;}
+  .nav-links{display:flex;gap:28px;list-style:none;margin:0;padding:0;}
+  .nav-links a{text-decoration:none;font-size:14.5px;font-weight:500;color:var(--text-soft);transition:color .2s;}
+  .nav-links a:hover{color:var(--ink);}
+  .nav-cta{background:var(--ink);color:var(--white);padding:10px 20px;border-radius:100px;font-size:14px;font-weight:600;text-decoration:none;border:none;cursor:pointer;}
+  @media (max-width:900px){ .nav-links{display:none;} }
+
+  /* HERO */
+  .hero{padding:64px 0 40px;}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--teal-deep);margin-bottom:22px;}
+  .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--teal);}
+  h1.hero-title{font-size:clamp(34px,5vw,58px);line-height:1.05;max-width:760px;}
+  .hero-sub{margin-top:20px;font-size:17.5px;line-height:1.6;color:var(--text-soft);max-width:600px;}
+  .hero-btns{display:flex;gap:14px;margin-top:32px;flex-wrap:wrap;}
+  .btn-primary{background:var(--teal);color:white;padding:15px 26px;border-radius:100px;font-weight:700;font-size:15px;text-decoration:none;border:none;cursor:pointer;}
+  .btn-ghost-dark{background:transparent;color:var(--ink);padding:14px 24px;border-radius:100px;font-weight:700;font-size:15px;text-decoration:none;border:1.5px solid var(--line-dark);cursor:pointer;}
+  .hero-note{margin-top:18px;font-size:13px;color:var(--text-soft);max-width:560px;}
+
+  /* generic section head */
+  .section-head{max-width:640px;margin-bottom:36px;}
+  .section-eyebrow{font-size:12.5px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-soft);margin-bottom:14px;}
+  .section-title{font-size:clamp(26px,3.2vw,38px);line-height:1.12;}
+  .section-desc{margin-top:14px;font-size:16px;color:var(--text-soft);line-height:1.6;}
+
+  /* triage strip */
+  .triage-section{padding:60px 0 10px;}
+  .triage-track{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;border-radius:20px;overflow:hidden;}
+  @media (max-width:820px){ .triage-track{grid-template-columns:1fr 1fr;} }
+  @media (max-width:520px){ .triage-track{grid-template-columns:1fr;} }
+  .triage-card{padding:24px 22px;min-height:150px;display:flex;flex-direction:column;justify-content:space-between;}
+  .triage-card .lvl{font-size:11.5px;font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;opacity:.75;}
+  .triage-card h3{font-size:18px;color:inherit;margin-top:30px;}
+  .triage-card p{font-size:13px;margin:8px 0 0;opacity:.85;line-height:1.5;}
+  .t1{background:#E8F0EC;color:var(--teal-deep);} .t2{background:#D7E7DF;color:var(--teal-deep);}
+  .t3{background:#F4D9C6;color:#8A4A1E;} .t4{background:var(--coral);color:white;}
+
+  /* how it works */
+  .how{padding:80px 0;}
+  .how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;}
+  @media (max-width:820px){ .how-grid{grid-template-columns:1fr;} }
+  .how-card{background:var(--white);border:1px solid var(--line);border-radius:20px;padding:28px 24px;}
+  .how-num{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--teal);font-weight:500;}
+  .how-card h3{font-size:20px;margin-top:12px;} .how-card p{font-size:14px;color:var(--text-soft);line-height:1.6;margin-top:10px;}
+
+  /* ===== APP SECTION (functional) ===== */
+  .app-section{padding:30px 0 90px;}
+  .live-flag{display:inline-flex;align-items:center;gap:7px;background:#DCEFE8;color:var(--teal-deep);font-size:12px;font-weight:700;padding:5px 12px;border-radius:100px;margin-bottom:14px;}
+  .live-flag .ring{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:blink 1.6s infinite;}
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:.25;}}
+  .app-shell{background:var(--white);border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:0 30px 60px -30px rgba(18,35,43,.2);}
+  .app-tabs{display:flex;border-bottom:1px solid var(--line);background:var(--paper-dim);}
+  .apptab{flex:1;padding:16px 10px;background:transparent;border:none;cursor:pointer;font-weight:600;font-size:14px;color:var(--text-soft);border-bottom:3px solid transparent;transition:all .2s;}
+  .apptab.active{color:var(--ink);background:var(--white);border-bottom-color:var(--teal);}
+  .app-panel{padding:32px;}
+  @media (max-width:640px){ .app-panel{padding:20px;} .apptab{font-size:12.5px;padding:14px 6px;} }
+
+  /* checker */
+  .disclaimer-line{font-size:12.5px;color:var(--text-soft);background:var(--paper-dim);padding:10px 14px;border-radius:10px;margin-bottom:18px;}
+  .chat-window{max-height:420px;overflow-y:auto;padding:6px 2px;margin-bottom:14px;}
+  .chat-line{display:flex;margin-bottom:12px;}
+  .bubble{padding:12px 15px;border-radius:16px;font-size:14.5px;line-height:1.55;max-width:80%;}
+  .bubble.user{margin-left:auto;background:var(--ink);color:var(--white);border-bottom-right-radius:4px;}
+  .bubble.ai{background:var(--paper-dim);color:var(--text);border-bottom-left-radius:4px;}
+  .bubble.err{background:#FCE7E2;color:var(--coral-deep);}
+  .typing{display:inline-flex;gap:4px;padding:6px 2px;}
+  .typing span{width:6px;height:6px;border-radius:50%;background:var(--text-soft);animation:tb 1s infinite ease-in-out;}
+  .typing span:nth-child(2){animation-delay:.15s;} .typing span:nth-child(3){animation-delay:.3s;}
+  @keyframes tb{0%,80%,100%{transform:scale(.6);opacity:.4;}40%{transform:scale(1);opacity:1;}}
+  .chat-input-row{display:flex;gap:10px;}
+  .chat-input-row input{flex:1;padding:13px 16px;border-radius:12px;border:1px solid var(--line);font-size:14.5px;font-family:'Inter',sans-serif;}
+  .chat-input-row button{background:var(--teal);color:white;border:none;padding:0 22px;border-radius:12px;font-weight:700;cursor:pointer;}
+  .chat-input-row button:disabled{opacity:.5;cursor:not-allowed;}
+  .result-card{margin-top:18px;padding:20px;border-radius:16px;border:1.5px solid var(--line);}
+  .result-badge{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:5px 12px;border-radius:100px;margin-bottom:12px;}
+  .rb-home{background:#E8F0EC;color:var(--teal-deep);} .rb-doctor{background:#D7E7DF;color:var(--teal-deep);}
+  .rb-urgent{background:#F4D9C6;color:#8A4A1E;} .rb-emergency{background:var(--coral);color:white;}
+  .result-card h4{font-size:14px;margin:14px 0 6px;color:var(--ink);}
+  .result-card ul{margin:0;padding-left:18px;font-size:13.5px;color:var(--text-soft);line-height:1.6;}
+  .reset-link{background:none;border:none;color:var(--text-soft);text-decoration:underline;cursor:pointer;font-size:13px;margin-top:14px;padding:0;}
+
+  /* emergency */
+  .cond-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+  @media (max-width:760px){ .cond-grid{grid-template-columns:repeat(2,1fr);} }
+  .cond-btn{background:var(--paper-dim);border:1.5px solid transparent;border-radius:14px;padding:16px 10px;text-align:center;cursor:pointer;font-size:13.5px;font-weight:600;color:var(--ink);}
+  .cond-btn.active{background:var(--ink);color:white;border-color:var(--ink);}
+  .cond-btn .ico{font-size:22px;display:block;margin-bottom:6px;}
+  .steps-box{border:1.5px solid var(--line);border-radius:16px;padding:20px;}
+  .step-row{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);}
+  .step-row:last-child{border-bottom:none;}
+  .step-num{width:26px;height:26px;border-radius:50%;background:var(--coral);color:white;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;flex-shrink:0;font-family:'IBM Plex Mono',monospace;}
+  .step-text{font-size:14.5px;line-height:1.55;padding-top:2px;}
+  .steps-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+  .btn-sm{padding:10px 16px;border-radius:10px;border:1.5px solid var(--line-dark);background:transparent;color:var(--ink);font-weight:600;font-size:13.5px;cursor:pointer;}
+  .btn-sm.on{background:var(--ink);color:white;}
+
+  /* daily tools */
+  .profile-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:26px;padding-bottom:20px;border-bottom:1px solid var(--line);}
+  .profile-chip{padding:9px 16px;border-radius:100px;background:var(--paper-dim);font-size:13.5px;font-weight:600;cursor:pointer;border:1.5px solid transparent;}
+  .profile-chip.active{background:var(--teal);color:white;}
+  .add-profile-btn{padding:9px 16px;border-radius:100px;background:transparent;border:1.5px dashed var(--line-dark);font-size:13.5px;font-weight:600;cursor:pointer;color:var(--text-soft);}
+  .tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  @media (max-width:760px){ .tool-grid{grid-template-columns:1fr;} }
+  .tool-block{border:1px solid var(--line);border-radius:16px;padding:20px;}
+  .tool-block h4{font-size:15.5px;margin-bottom:12px;}
+  .tool-list{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px;max-height:180px;overflow-y:auto;}
+  .tool-item{display:flex;justify-content:space-between;align-items:center;background:var(--paper-dim);padding:9px 12px;border-radius:10px;font-size:13.5px;}
+  .tool-item small{display:block;color:var(--text-soft);font-size:11.5px;}
+  .del-btn{background:none;border:none;color:var(--text-soft);cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;}
+  .mini-form{display:flex;gap:8px;flex-wrap:wrap;}
+  .mini-form input{flex:1;min-width:90px;padding:9px 10px;border-radius:8px;border:1px solid var(--line);font-size:13px;}
+  .mini-form button{background:var(--teal);color:white;border:none;padding:9px 14px;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px;}
+  .empty-note{font-size:13px;color:var(--text-soft);font-style:italic;margin:0 0 10px;}
+  .report-box{margin-top:24px;padding:20px;border-radius:16px;background:var(--paper-dim);font-size:14px;line-height:1.6;color:var(--text);}
+
+  footer{padding:36px 0;border-top:1px solid var(--line);}
+  .foot-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;font-size:13px;color:var(--text-soft);}
+  @media (prefers-reduced-motion: reduce){ *{animation:none !important;transition:none !important;} }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#top" class="brand">
+      <svg class="brand-mark" viewBox="0 0 26 26" fill="none">
+        <path d="M13 3 L22 7 V13 C22 19 18 22.5 13 24 C8 22.5 4 19 4 13 V7 Z" fill="#1F6F63"/>
+        <path d="M8 13.5 H11 L12.3 10 L14 17 L15.2 13.5 H18" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      LifeAid AI
+    </a>
+    <ul class="nav-links">
+      <li><a href="#how-it-works">How it works</a></li>
+      <li><a href="#app">Try it live</a></li>
+      <li><a href="#roadmap">What's next</a></li>
+    </ul>
+    <a href="#app" class="nav-cta">Launch the app</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="eyebrow"><span class="dot"></span> A working demo — not just a mockup</div>
+    <h1 class="hero-title">Know what's wrong. Know what to do next.</h1>
+    <p class="hero-sub">Describe your symptoms and get a real AI-guided assessment, pull up genuine step-by-step first aid, and keep a real medical record for your whole family — all running live below.</p>
+    <div class="hero-btns">
+      <a href="#app" class="btn-primary">Try the live app ↓</a>
+      <a href="#emergency-tab" class="btn-ghost-dark" onclick="document.querySelector('[data-tab=emergency]').click()">Jump to Emergency Mode</a>
+    </div>
+    <p class="hero-note">Honest note: this runs in your browser. The AI conversation, first-aid steps, and saved records are all real — it just needs an internet connection to load and to talk to the AI.</p>
+  </div>
+</header>
+
+<section class="triage-section">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-eyebrow">Where should you actually go?</div>
+      <h2 class="section-title">One clear recommendation, every time.</h2>
+      <p class="section-desc">The symptom checker below weighs your answers and points you to exactly one of these four next steps.</p>
+    </div>
+    <div class="triage-track">
+      <div class="triage-card t1"><span class="lvl">LOW URGENCY</span><div><h3>Rest at home</h3><p>Self-care guidance and what to watch for.</p></div></div>
+      <div class="triage-card t2"><span class="lvl">SCHEDULED</span><div><h3>Doctor's appointment</h3><p>Worth a visit, but it can wait for your provider.</p></div></div>
+      <div class="triage-card t3"><span class="lvl">SAME DAY</span><div><h3>Urgent care</h3><p>Needs attention today, not life-threatening.</p></div></div>
+      <div class="triage-card t4"><span class="lvl">EMERGENCY</span><div><h3>Emergency care</h3><p>Go to the ER or call emergency services now.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="how" id="how-it-works">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-eyebrow">How it works</div>
+      <h2 class="section-title">Three steps, plain language throughout.</h2>
+    </div>
+    <div class="how-grid">
+      <div class="how-card"><span class="how-num mono">01</span><h3>Describe how you feel</h3><p>Type where it hurts or what's off, in your own words.</p></div>
+      <div class="how-card"><span class="how-num mono">02</span><h3>Answer a few quick questions</h3><p>The AI narrows things down with short, tailored follow-ups.</p></div>
+      <div class="how-card"><span class="how-num mono">03</span><h3>Get a clear next step</h3><p>Likely causes, safe self-care tips, and where to go — plus why.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="app-section" id="app">
+  <div class="wrap">
+    <div class="live-flag"><span class="ring"></span>Live — this actually works</div>
+    <div class="section-head">
+      <h2 class="section-title">Try LifeAid AI right now</h2>
+      <p class="section-desc">Everything below is fully functional: a real AI conversation, a real first-aid library with read-aloud steps, and a real record system that saves to your browser.</p>
+    </div>
+
+    <div class="app-shell">
+      <div class="app-tabs">
+        <button class="apptab active" data-tab="checker">Symptom Checker</button>
+        <button class="apptab" data-tab="emergency" id="emergency-tab">Emergency Mode</button>
+        <button class="apptab" data-tab="tools">Daily Tools</button>
+      </div>
+
+      <!-- CHECKER PANEL -->
+      <div class="app-panel" id="panel-checker">
+        <p class="disclaimer-line">This AI gives general information, not a diagnosis. If symptoms sound serious, it will tell you to seek emergency care immediately.</p>
+        <div class="chat-window" id="chatWindow"></div>
+        <div class="chat-input-row">
+          <input type="text" id="checkerInput" placeholder="Describe how you're feeling..." />
+          <button id="checkerSend">Send</button>
+        </div>
+        <div id="checkerResult"></div>
+      </div>
+
+      <!-- EMERGENCY PANEL -->
+      <div class="app-panel" id="panel-emergency" hidden>
+        <p class="disclaimer-line">If someone is unresponsive, not breathing, or in immediate danger, call your local emergency number first — before reading any steps below.</p>
+        <div class="cond-grid" id="condGrid"></div>
+        <div class="steps-box" id="stepsBox">
+          <p class="empty-note">Pick a situation above to see step-by-step first aid.</p>
+        </div>
+      </div>
+
+      <!-- TOOLS PANEL -->
+      <div class="app-panel" id="panel-tools" hidden>
+        <div class="profile-bar" id="profileBar"></div>
+        <div class="tool-grid">
+          <div class="tool-block">
+            <h4>Medications</h4>
+            <ul class="tool-list" id="medList"></ul>
+            <form class="mini-form" id="medForm">
+              <input type="text" name="name" placeholder="Medication" required>
+              <input type="text" name="dose" placeholder="Dose &amp; schedule">
+              <button type="submit">Add</button>
+            </form>
+          </div>
+          <div class="tool-block">
+            <h4>Symptom log</h4>
+            <ul class="tool-list" id="symptomList"></ul>
+            <form class="mini-form" id="symptomForm">
+              <input type="text" name="text" placeholder="What are you feeling?" required>
+              <input type="text" name="severity" placeholder="Severity 1-10" style="max-width:110px;">
+              <button type="submit">Add</button>
+            </form>
+          </div>
+          <div class="tool-block">
+            <h4>Allergies</h4>
+            <ul class="tool-list" id="allergyList"></ul>
+            <form class="mini-form" id="allergyForm">
+              <input type="text" name="name" placeholder="Allergy" required>
+              <input type="text" name="reaction" placeholder="Reaction">
+              <button type="submit">Add</button>
+            </form>
+          </div>
+          <div class="tool-block">
+            <h4>Vaccination history</h4>
+            <ul class="tool-list" id="vaccineList"></ul>
+            <form class="mini-form" id="vaccineForm">
+              <input type="text" name="name" placeholder="Vaccine" required>
+              <input type="text" name="date" placeholder="Date (e.g. 2024-03)">
+              <button type="submit">Add</button>
+            </form>
+          </div>
+        </div>
+        <button class="btn-sm" id="reportBtn" style="margin-top:22px;">Generate health report</button>
+        <div id="reportBox"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="how" id="roadmap">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-eyebrow">Where it's headed</div>
+      <h2 class="section-title">Explains its reasoning today. Sees more tomorrow.</h2>
+      <p class="section-desc">Future versions add photo analysis for visible conditions (rashes, cuts, burns, bruises, bites) and wearable integration for heart rate and fall detection.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-inner">
+    <span>© 2026 LifeAid AI. Not a substitute for professional medical advice.</span>
+    <span>In a life-threatening emergency, call your local emergency number immediately.</span>
+  </div>
+</footer>
+
+<script>
+/* ---------------- CLAUDE API HELPER ---------------- */
+async function callClaude(system, messages){
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1000,
+      system: system,
+      messages: messages
+    })
+  });
+  const data = await response.json();
+  const text = (data.content || []).map(b => b.text || "").join("\n");
+  return text;
+}
+function safeParseJSON(text){
+  const cleaned = text.replace(/```json|```/g, "").trim();
+  try { return JSON.parse(cleaned); } catch(e){ return null; }
+}
+
+/* ---------------- TABS ---------------- */
+document.querySelectorAll(".apptab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".apptab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".app-panel").forEach(p => p.hidden = true);
+    document.getElementById("panel-" + btn.dataset.tab).hidden = false;
+  });
+});
+
+/* ---------------- SYMPTOM CHECKER ---------------- */
+const CHECKER_SYSTEM = "You are LifeAid AI, a careful symptom-checking assistant in a demo app. Ask at most 2-3 short follow-up questions total, one at a time, to understand the person's symptoms. Once you have enough information, stop and give a final assessment. Respond ONLY with a single valid JSON object, no markdown fences, no extra text, in exactly this shape: {\"reply\": string, \"done\": boolean, \"recommendation\": \"home\"|\"doctor\"|\"urgent\"|\"emergency\"|null, \"possibleCauses\": array of short strings or null, \"selfCare\": array of short strings or null, \"reasoning\": string or null}. While asking a follow-up question, set done=false and put ONLY the question in reply, leave recommendation/possibleCauses/selfCare/reasoning null. On your final message set done=true: reply is a short warm closing line, recommendation is required, possibleCauses lists 2-4 plain-language possibilities (never a definitive diagnosis), selfCare has brief safe tips ONLY if recommendation is home or doctor (otherwise an empty array), reasoning briefly explains the recommendation in plain language. If the described symptoms could indicate a medical emergency (e.g. chest pain with shortness of breath, stroke signs, severe bleeding, trouble breathing, anaphylaxis, loss of consciousness) skip further questions and immediately return done=true with recommendation=\"emergency\". Never claim to diagnose. Keep language simple and calm.";
+let checkerHistory = [];
+let checkerDone = false;
+
+function addBubble(role, html){
+  const win = document.getElementById("chatWindow");
+  const line = document.createElement("div");
+  line.className = "chat-line";
+  line.innerHTML = '<div class="bubble ' + role + '">' + html + '</div>';
+  win.appendChild(line);
+  win.scrollTop = win.scrollHeight;
+  return line;
+}
+
+async function sendCheckerMessage(){
+  if (checkerDone) return;
+  const input = document.getElementById("checkerInput");
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = "";
+  document.getElementById("checkerSend").disabled = true;
+  addBubble("user", escapeHtml(text));
+  checkerHistory.push({role:"user", content: text});
+  const thinking = addBubble("ai", '<span class="typing"><span></span><span></span><span></span></span>');
+  try {
+    const raw = await callClaude(CHECKER_SYSTEM, checkerHistory);
+    const parsed = safeParseJSON(raw);
+    thinking.remove();
+    if (!parsed){
+      addBubble("err", "Something went wrong reading that response — please try rephrasing.");
+    } else {
+      checkerHistory.push({role:"assistant", content: raw});
+      addBubble("ai", escapeHtml(parsed.reply || ""));
+      if (parsed.done){
+        checkerDone = true;
+        renderResult(parsed);
+      }
+    }
+  } catch(e){
+    thinking.remove();
+    addBubble("err", "Couldn't reach the AI right now — please try again in a moment.");
+  }
+  document.getElementById("checkerSend").disabled = false;
+}
+
+function renderResult(p){
+  const map = {home:["rb-home","Rest at home"], doctor:["rb-doctor","Doctor's appointment"], urgent:["rb-urgent","Urgent care"], emergency:["rb-emergency","Emergency care"]};
+  const m = map[p.recommendation] || map.doctor;
+  let html = '<div class="result-card"><span class="result-badge ' + m[0] + '">' + m[1] + '</span>';
+  if (p.possibleCauses && p.possibleCauses.length){
+    html += '<h4>Possible causes</h4><ul>' + p.possibleCauses.map(c => '<li>' + escapeHtml(c) + '</li>').join('') + '</ul>';
+  }
+  if (p.selfCare && p.selfCare.length){
+    html += '<h4>Self-care tips</h4><ul>' + p.selfCare.map(c => '<li>' + escapeHtml(c) + '</li>').join('') + '</ul>';
+  }
+  if (p.reasoning){
+    html += '<h4>Why</h4><p style="font-size:13.5px;color:var(--text-soft);margin:0;">' + escapeHtml(p.reasoning) + '</p>';
+  }
+  html += '<button class="reset-link" onclick="resetChecker()">Start a new check</button></div>';
+  document.getElementById("checkerResult").innerHTML = html;
+}
+
+function resetChecker(){
+  checkerHistory = [];
+  checkerDone = false;
+  document.getElementById("chatWindow").innerHTML = "";
+  document.getElementById("checkerResult").innerHTML = "";
+}
+
+function escapeHtml(str){
+  const d = document.createElement("div");
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+document.getElementById("checkerSend").addEventListener("click", sendCheckerMessage);
+document.getElementById("checkerInput").addEventListener("keydown", e => { if (e.key === "Enter") sendCheckerMessage(); });
+
+/* ---------------- EMERGENCY MODE ---------------- */
+const CONDITIONS = [
+  {id:"choking", icon:"😮", name:"Choking", steps:[
+    "Ask 'are you choking?' — if they can cough, speak, or breathe, encourage them to keep coughing.",
+    "If they cannot breathe, cough, or speak, stand behind them and give 5 firm back blows between the shoulder blades with the heel of your hand.",
+    "If that doesn't clear it, give 5 abdominal thrusts: fist above the navel, grab it with your other hand, pull sharply inward and upward.",
+    "Keep alternating 5 back blows and 5 abdominal thrusts until the object comes out or they become unresponsive.",
+    "If they become unresponsive, lower them to the ground and begin CPR, and call emergency services immediately if not already done."
+  ]},
+  {id:"bleeding", icon:"🩸", name:"Severe bleeding", steps:[
+    "Call emergency services immediately.",
+    "Apply firm, direct pressure to the wound with a clean cloth or dressing.",
+    "Do not remove the cloth if it soaks through — add more layers on top and keep pressing.",
+    "If possible, raise the injured area above the level of the heart.",
+    "Keep steady pressure on until help arrives; watch for signs of shock (pale skin, weakness, rapid breathing)."
+  ]},
+  {id:"burns", icon:"🔥", name:"Burns", steps:[
+    "Move the person away from the source of the burn.",
+    "Cool the burn under cool (not ice-cold) running water for 10-20 minutes.",
+    "Remove tight items like rings or watches near the burn before swelling starts.",
+    "Cover loosely with a clean, non-fluffy cloth or dressing — do not apply creams, butter, or ice.",
+    "Seek emergency care for large, deep burns, burns on the face/hands/genitals, or if caused by chemicals or electricity."
+  ]},
+  {id:"allergic", icon:"🐝", name:"Allergic reaction", steps:[
+    "Ask if they carry an epinephrine auto-injector (e.g. EpiPen) and help them use it if symptoms are severe (swelling of face/throat, trouble breathing, dizziness).",
+    "Call emergency services immediately for any signs of a severe reaction.",
+    "Have them lie down with legs raised, unless they're having trouble breathing — then let them sit up.",
+    "Loosen tight clothing and keep them calm and warm.",
+    "A second epinephrine dose can be given after about 5-15 minutes if symptoms haven't improved and more is available."
+  ]},
+  {id:"seizure", icon:"⚡", name:"Seizure", steps:[
+    "Stay calm and time the seizure.",
+    "Clear the area of anything that could cause injury; do not hold the person down or put anything in their mouth.",
+    "Cushion their head with something soft.",
+    "Once the movements stop, gently roll them onto their side into the recovery position.",
+    "Call emergency services if the seizure lasts more than 5 minutes, they don't wake up, or another seizure follows right after."
+  ]},
+  {id:"heartattack", icon:"❤️", name:"Heart attack", steps:[
+    "Call emergency services immediately — this comes first.",
+    "Have the person sit down, rest, and try to stay calm.",
+    "Loosen tight clothing around the neck and chest.",
+    "If they take prescribed heart medication like nitroglycerin, help them take it as directed.",
+    "If they become unresponsive and stop breathing normally, begin CPR right away."
+  ]},
+  {id:"stroke", icon:"🧠", name:"Stroke", steps:[
+    "Think FAST: Face drooping, Arm weakness, Speech difficulty — Time to call emergency services.",
+    "Call emergency services immediately and note the time symptoms started.",
+    "Keep the person still and comfortable; do not give them food, drink, or medication.",
+    "If they're unconscious but breathing, place them in the recovery position on their side.",
+    "Stay with them and monitor breathing and responsiveness until help arrives."
+  ]},
+  {id:"broken", icon:"🦴", name:"Broken bone", steps:[
+    "Keep the injured area still — avoid moving or straightening it.",
+    "Support the area above and below the injury, using a rolled towel or cushion if available.",
+    "Apply a cold pack wrapped in cloth to reduce swelling, not directly on the skin.",
+    "If there's an open wound, cover it gently with a clean dressing without pressing on the bone.",
+    "Seek emergency care for suspected breaks in the head, neck, back, or hip, or if the limb looks deformed or bone is visible."
+  ]}
+];
+
+let currentCondition = null;
+let speaking = false;
+
+function renderConditionGrid(){
+  const grid = document.getElementById("condGrid");
+  grid.innerHTML = CONDITIONS.map(c =>
+    '<button class="cond-btn" data-id="' + c.id + '"><span class="ico">' + c.icon + '</span>' + c.name + '</button>'
+  ).join("");
+  grid.querySelectorAll(".cond-btn").forEach(btn => {
+    btn.addEventListener("click", () => selectCondition(btn.dataset.id));
+  });
+}
+
+function selectCondition(id){
+  currentCondition = CONDITIONS.find(c => c.id === id);
+  document.querySelectorAll(".cond-btn").forEach(b => b.classList.toggle("active", b.dataset.id === id));
+  window.speechSynthesis.cancel();
+  speaking = false;
+  const box = document.getElementById("stepsBox");
+  box.innerHTML = currentCondition.steps.map((s,i) =>
+    '<div class="step-row"><div class="step-num">' + (i+1) + '</div><div class="step-text">' + escapeHtml(s) + '</div></div>'
+  ).join("") + '<div class="steps-actions"><button class="btn-sm" id="speakBtn">🔊 Read steps aloud</button></div>';
+  document.getElementById("speakBtn").addEventListener("click", toggleSpeak);
+}
+
+function toggleSpeak(){
+  const btn = document.getElementById("speakBtn");
+  if (speaking){
+    window.speechSynthesis.cancel();
+    speaking = false;
+    btn.classList.remove("on");
+    btn.textContent = "🔊 Read steps aloud";
+    return;
+  }
+  const text = currentCondition.steps.map((s,i) => "Step " + (i+1) + ". " + s).join(". ");
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = 0.95;
+  utter.onend = () => { speaking = false; btn.classList.remove("on"); btn.textContent = "🔊 Read steps aloud"; };
+  window.speechSynthesis.speak(utter);
+  speaking = true;
+  btn.classList.add("on");
+  btn.textContent = "⏹ Stop reading";
+}
+
+renderConditionGrid();
+
+/* ---------------- DAILY TOOLS (persistent storage) ---------------- */
+let profiles = [];
+let activeProfileId = null;
+const PALETTE = ["#1F6F63","#E8543A","#164F46","#5A6B6A","#8A4A1E"];
+
+async function loadProfiles(){
+  try {
+    const res = await window.storage.get("profiles", false);
+    profiles = res ? JSON.parse(res.value) : [];
+  } catch(e){ profiles = []; }
+  if (profiles.length === 0){
+    profiles = [{id: "p1", name: "Me", color: PALETTE[0]}];
+    await window.storage.set("profiles", JSON.stringify(profiles), false);
+  }
+  activeProfileId = profiles[0].id;
+}
+
+async function saveProfiles(){
+  await window.storage.set("profiles", JSON.stringify(profiles), false);
+}
+
+async function getRecord(profileId){
+  try {
+    const res = await window.storage.get("record:" + profileId, false);
+    return res ? JSON.parse(res.value) : {meds:[], symptoms:[], allergies:[], vaccines:[]};
+  } catch(e){
+    return {meds:[], symptoms:[], allergies:[], vaccines:[]};
+  }
+}
+async function saveRecord(profileId, rec){
+  await window.storage.set("record:" + profileId, JSON.stringify(rec), false);
+}
+async function getActiveRecord(){
+  if (!activeProfileId) return null;
+  return await getRecord(activeProfileId);
+}
+
+function renderProfileBar(){
+  const bar = document.getElementById("profileBar");
+  bar.innerHTML = profiles.map(p =>
+    '<button class="profile-chip' + (p.id === activeProfileId ? ' active' : '') + '" data-id="' + p.id + '">' + escapeHtml(p.name) + '</button>'
+  ).join("") + '<button class="add-profile-btn" id="addProfileBtn">+ Add family member</button>';
+  bar.querySelectorAll(".profile-chip").forEach(chip => {
+    chip.addEventListener("click", () => { activeProfileId = chip.dataset.id; renderProfileBar(); renderAllLists(); });
+  });
+  document.getElementById("addProfileBtn").addEventListener("click", async () => {
+    const name = prompt("Name for this family member:");
+    if (!name) return;
+    const p = {id: "p" + Date.now(), name: name, color: PALETTE[profiles.length % PALETTE.length]};
+    profiles.push(p);
+    activeProfileId = p.id;
+    await saveProfiles();
+    renderProfileBar();
+    renderAllLists();
+  });
+}
+
+function toolItemHtml(id, listKey, mainText, subText){
+  return '<li class="tool-item"><div>' + escapeHtml(mainText) + (subText ? '<small>' + escapeHtml(subText) + '</small>' : '') + '</div><button class="del-btn" data-list="' + listKey + '" data-id="' + id + '">✕</button></li>';
+}
+
+async function renderAllLists(){
+  const rec = await getRecord(activeProfileId);
+  document.getElementById("medList").innerHTML = rec.meds.length ? rec.meds.map(m => toolItemHtml(m.id,"meds",m.name,m.dose)).join("") : '<p class="empty-note">No medications yet.</p>';
+  document.getElementById("symptomList").innerHTML = rec.symptoms.length ? rec.symptoms.map(s => toolItemHtml(s.id,"symptoms",s.text, s.date + (s.severity ? " · severity " + s.severity : ""))).join("") : '<p class="empty-note">No entries yet.</p>';
+  document.getElementById("allergyList").innerHTML = rec.allergies.length ? rec.allergies.map(a => toolItemHtml(a.id,"allergies",a.name,a.reaction)).join("") : '<p class="empty-note">No allergies recorded.</p>';
+  document.getElementById("vaccineList").innerHTML = rec.vaccines.length ? rec.vaccines.map(v => toolItemHtml(v.id,"vaccines",v.name,v.date)).join("") : '<p class="empty-note">No vaccinations recorded.</p>';
+
+  document.querySelectorAll(".del-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const rec2 = await getRecord(activeProfileId);
+      rec2[btn.dataset.list] = rec2[btn.dataset.list].filter(x => x.id !== btn.dataset.id);
+      await saveRecord(activeProfileId, rec2);
+      renderAllLists();
+    });
+  });
+}
+
+function hookForm(formId, listKey, buildItem){
+  document.getElementById(formId).addEventListener("submit", async e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const rec = await getRecord(activeProfileId);
+    rec[listKey].push(buildItem(fd));
+    await saveRecord(activeProfileId, rec);
+    e.target.reset();
+    renderAllLists();
+  });
+}
+
+hookForm("medForm", "meds", fd => ({id: "m" + Date.now(), name: fd.get("name"), dose: fd.get("dose")}));
+hookForm("symptomForm", "symptoms", fd => ({id: "s" + Date.now(), text: fd.get("text"), severity: fd.get("severity"), date: new Date().toLocaleDateString()}));
+hookForm("allergyForm", "allergies", fd => ({id: "a" + Date.now(), name: fd.get("name"), reaction: fd.get("reaction")}));
+hookForm("vaccineForm", "vaccines", fd => ({id: "v" + Date.now(), name: fd.get("name"), date: fd.get("date")}));
+
+document.getElementById("reportBtn").addEventListener("click", async () => {
+  const box = document.getElementById("reportBox");
+  box.innerHTML = '<div class="report-box"><span class="typing"><span></span><span></span><span></span></span></div>';
+  const rec = await getRecord(activeProfileId);
+  const profile = profiles.find(p => p.id === activeProfileId);
+  try {
+    const raw = await callClaude(
+      "You write short, warm, plain-language health summaries from structured record data for a demo app. Respond with plain text only, 3-5 sentences, no markdown headers. Never invent facts not in the data.",
+      [{role:"user", content: "Write a brief personalized health summary for " + profile.name + " based on this record: " + JSON.stringify(rec)}]
+    );
+    box.innerHTML = '<div class="report-box">' + escapeHtml(raw) + '</div>';
+  } catch(e){
+    box.innerHTML = '<div class="report-box">Couldn\'t generate a report right now — please try again.</div>';
+  }
+});
+
+(async function init(){
+  await loadProfiles();
+  renderProfileBar();
+  renderAllLists();
+})();
+</script>
+
+</body>
+</html>
